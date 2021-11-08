@@ -2,7 +2,8 @@ import numpy as np
 import math 
 from ansys.mapdl.core import launch_mapdl
 
-DEBUG = False
+DEBUG_FUNCTIONS = False
+DEBUG_MAIN = False
 
 
 #    +-----------------------------------------------------+
@@ -23,7 +24,9 @@ def main():
     # Creates the volume
     create_volume(mapdl)
 
-
+    # Creates the volume
+    #TODO: Complete meshing
+    #mesh_volume(mapdl)
 
     print("Finished Running")
 
@@ -44,7 +47,7 @@ def main():
 #    +-----------------------------------------------------+
 
 def define_units(mapdl):
-    print("Defining units... \n\n")
+    print("Defining units... ")
 
     # This example will use SI units.
     mapdl.prep7()
@@ -59,54 +62,49 @@ def define_units(mapdl):
 
 
 def create_volume(mapdl):
-    print("Creating Volume... \n\n")
-    create_bottom_circle(mapdl)
-
+    print("Creating Volume... ")
     
+
     # --------- Structure Variations  --------- 
 
     degree_offset = 60
     h = 30
-    res = 1
+    res = 10
     # --------- Structure Variations  --------- 
 
+    create_bottom_circle(mapdl)
 
-    curr_deg = 0
-    while curr_deg < 360 :
-        x = 21 * math.cos(math.radians(curr_deg))
-        y = 21 * math.sin(math.radians(curr_deg))
-        z = 3
-
-        f1 = f_gen(lambda x: x, math.radians(curr_deg), 21)
-        sweep_z_function(mapdl, f1, r = 1, x = x, y = y, z = z, length = h, res = res)
-
-        f2 = f_gen(lambda x: -x, math.radians(curr_deg), 21)
-        sweep_z_function(mapdl, f2, r = 1, x = x, y = y, z = z, length = h, res = res)
-
-        f3 = f_gen(lambda x: 0, math.radians(curr_deg), 21)
-        sweep_z_function(mapdl, f3, r = 1, x = x, y = y, z = z, length = h, res = res)
-
-        curr_deg += degree_offset
-
+    #draw_line(mapdl, lambda x: x, degree_offset, 3, 21, 1, h, res)
+    #draw_line(mapdl, lambda x: -x, degree_offset, 3, 21, 1, h, res)
+    draw_line(mapdl, lambda x: 0,  degree_offset, 3, 21, 1, h, res)
 
     create_top_circle(mapdl, h)
 
-
+    if DEBUG_MAIN:
+        mapdl.lplot(show_line_numbering = False, show_keypoint_numbering = False)
+        print("Printing Volume... ")
+    
     print("Volume Processing Done... \n\n")
-    mapdl.lplot(show_line_numbering = False, show_keypoint_numbering = False)
 
-    print("Finished Creating Volume \n\n")
 
-def f_gen(f, theta, r):
+#TODO: This is currently a work in progress
+def mesh_volume(mapdl):
+    
+    print("Creating Mesh... ")
+    plate_esize = 0.01
+    mapdl.esize(plate_esize)
 
-    def ret(z):
-        a = math.atan(f(z)/r)
-        x = r * math.cos(a + theta)
-        y = r * math.sin(a + theta)
+    body = mapdl.asel("ALL")
+    print(body, "\n\n\n")
+    mapdl.amesh(body)
 
-        return x, y
 
-    return ret
+
+    print("Finished Meshing... \n\n")
+    
+
+
+
 
 
 
@@ -117,6 +115,28 @@ def f_gen(f, theta, r):
 #    |            create_volume Functions                  |
 #    |                                                     |
 #    +-----------------------------------------------------+
+
+def draw_line(mapdl, f, offset, initial_z, circ_rad, beam_rad, height, resolution = 0.1):
+
+    def f_gen(f, theta, r):
+        def ret(z):
+            a = math.atan(f(z)/r)
+            x = r * math.cos(a + theta)
+            y = r * math.sin(a + theta)
+            return x, y
+        return ret
+
+    deg = 0
+    while deg < 360 :
+        x = circ_rad * math.cos(math.radians(deg))
+        y = circ_rad * math.sin(math.radians(deg))
+        z = initial_z
+
+        f1 = f_gen(f, math.radians(deg), circ_rad)
+        sweep_z_function(mapdl, f1, beam_rad, x, y, z, height, resolution)
+
+        deg += offset
+
 def create_bottom_circle(mapdl):
         bottom_point = mapdl.k("", 0, 0, 0)
         bottom_circle = create_circle(mapdl, bottom_point, ID = 20, OD = 22)
@@ -156,10 +176,8 @@ def sweep_z_function(mapdl, f, r = 1, x = 0, y = 0, z = 0, length = 10, res = 0.
         x0, y0, z0 = x1, y1, z1
         z1 += res
 
-    if DEBUG:
+    if DEBUG_FUNCTIONS:
             mapdl.vplot()
-
-
 
 #    +-----------------------------------------------------+
 #    |                                                     |
@@ -172,7 +190,7 @@ def create_circle(mapdl, c0, ID = 20, OD = 22):
         circ2 = mapdl.al(*mapdl.circle(c0, OD))
         output = mapdl.asba(circ2, circ1)
 
-        if DEBUG:
+        if  DEBUG_FUNCTIONS:
             mapdl.aplot()
             print(output)
 
@@ -182,7 +200,7 @@ def extrude_shape(mapdl, shape, k0, k1):
     l0 = mapdl.l(k0, k1)
     output = mapdl.vdrag(shape, nlp1=l0)
 
-    if DEBUG:
+    if  DEBUG_FUNCTIONS:
             mapdl.vplot()
             print(output)
 
