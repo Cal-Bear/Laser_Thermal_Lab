@@ -3,7 +3,7 @@ import math
 from ansys.mapdl.core import launch_mapdl
 
 DEBUG_FUNCTIONS = False
-DEBUG_MAIN = False
+DEBUG_MAIN = True
 
 
 #    +-----------------------------------------------------+
@@ -22,11 +22,17 @@ def main():
     define_units(mapdl)
 
     # Creates the volume
-    create_volume(mapdl)
+    v = create_volume(mapdl)
 
     # Creates the volume
     #TODO: Complete meshing
-    #mesh_volume(mapdl)
+    mesh_volume(mapdl, v)
+
+    # Creates boundary conditions
+    boundary_conditions(mapdl)
+
+    # Runs simulations
+    run(mapdl)
 
     print("Finished Running")
 
@@ -58,7 +64,7 @@ def define_units(mapdl):
     mapdl.mp("DENS", 1, 7800)  # Density in kg/m3
     mapdl.mp("NUXY", 1, 0.3)  # Poisson's Ratio 
 
-    print("Finished Defining Units \n\n")
+    print("Finished Defining Units \n")
 
 
 def create_volume(mapdl):
@@ -69,41 +75,79 @@ def create_volume(mapdl):
 
     degree_offset = 60
     h = 30
-    res = 10
+    res = 5
     # --------- Structure Variations  --------- 
 
-    create_bottom_circle(mapdl)
+    bot = create_bottom_circle(mapdl)
 
     #draw_line(mapdl, lambda x: x, degree_offset, 3, 21, 1, h, res)
     #draw_line(mapdl, lambda x: -x, degree_offset, 3, 21, 1, h, res)
     draw_line(mapdl, lambda x: 0,  degree_offset, 3, 21, 1, h, res)
 
-    create_top_circle(mapdl, h)
+
+    create_top_circle(mapdl, h + 3)
+
+    mapdl.vglue("ALL")
 
     if DEBUG_MAIN:
-        mapdl.lplot(show_line_numbering = False, show_keypoint_numbering = False)
         print("Printing Volume... ")
+        #mapdl.lplot(show_line_numbering = False, show_keypoint_numbering = False)
+        
     
-    print("Volume Processing Done... \n\n")
+    print("Volume Processing Done... \n")
+    return bot
 
 
 #TODO: This is currently a work in progress
-def mesh_volume(mapdl):
+def mesh_volume(mapdl, volume):
     
-    print("Creating Mesh... ")
-    plate_esize = 0.01
-    mapdl.esize(plate_esize)
+    print("Printing Volumes... ")
+    print(mapdl.vlist("ALL"))
 
-    body = mapdl.asel("ALL")
-    print(body, "\n\n\n")
-    mapdl.amesh(body)
+    print("Meshing... \n")
+    mapdl.prep7()
+    mapdl.et(1, "SOLID187")
+    mapdl.vmesh("all")
 
-
-
-    print("Finished Meshing... \n\n")
+    if DEBUG_MAIN:
+        print("Printing mesh...")
+        _ = mapdl.eplot(vtk=True, show_edges=True, show_axes=False, line_width=2, background="w")
+    print("Finished Meshing... \n")
     
 
+#TODO: This is currently a work in progress
+def boundary_conditions(mapdl):
+    mapdl.nsel("S", "LOC", "Z", 0)
+    mapdl.d("ALL", "UX")
+    mapdl.d("ALL", "UY")
+    mapdl.d("ALL", "UZ")
 
+    mapdl.nsel("S", "LOC", "Z", 36)
+    mapdl.cp(5, "UX", "ALL")
+
+    
+    mapdl.nsel("R", "LOC", "Z", 36)
+    mapdl.f("ALL", "FZ", 10000)  
+
+    _ = mapdl.allsel()
+
+
+def run(mapdl):
+    mapdl.run("/SOLU")
+    mapdl.antype("STATIC")
+    mapdl.solve()
+    mapdl.finish()
+
+    result = mapdl.result
+    result.plot_principal_nodal_stress(
+        0,
+        "SEQV",
+        lighting=False,
+        background="w",
+        show_edges=True,
+        text_color="k",
+        add_text=False,
+    )
 
 
 
@@ -143,7 +187,8 @@ def create_bottom_circle(mapdl):
 
         k0 = mapdl.k("", 0, 0, 0)
         k1 = mapdl.k("", 0, 0, 3)
-        extrude_shape(mapdl, bottom_circle, k0, k1)
+        output = extrude_shape(mapdl, bottom_circle, k0, k1)
+        return output
 
 def create_top_circle(mapdl, height):
         bottom_point = mapdl.k("", 0, 0, height)
@@ -151,7 +196,8 @@ def create_top_circle(mapdl, height):
 
         k0 = mapdl.k("", 0, 0, height)
         k1 = mapdl.k("", 0, 0, height + 3)
-        extrude_shape(mapdl, bottom_circle, k0, k1)
+        output = extrude_shape(mapdl, bottom_circle, k0, k1)
+        return output
 
 def sweep_z_function(mapdl, f, r = 1, x = 0, y = 0, z = 0, length = 10, res = 0.1):
 
