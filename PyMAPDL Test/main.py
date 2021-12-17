@@ -22,11 +22,11 @@ def main():
     define_units(mapdl)
 
     # Creates the volume
-    v = create_volume(mapdl)
+    create_volume(mapdl)
 
     # Creates the volume
     #TODO: Complete meshing
-    mesh_volume(mapdl, v)
+    mesh_volume(mapdl)
 
     # Creates boundary conditions
     boundary_conditions(mapdl)
@@ -87,7 +87,9 @@ def create_volume(mapdl):
 
     create_top_circle(mapdl, h + 3)
 
-    mapdl.vglue("ALL")
+    _ = mapdl.vplot()
+
+    mapdl.vadd("ALL")
 
     if DEBUG_MAIN:
         print("Printing Volume... ")
@@ -95,14 +97,10 @@ def create_volume(mapdl):
         
     
     print("Volume Processing Done... \n")
-    return bot
 
 
 #TODO: This is currently a work in progress
-def mesh_volume(mapdl, volume):
-    
-    print("Printing Volumes... ")
-    print(mapdl.vlist("ALL"))
+def mesh_volume(mapdl):
 
     print("Meshing... \n")
     mapdl.prep7()
