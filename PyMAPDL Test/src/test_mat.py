@@ -18,35 +18,35 @@ def main():
     # Define units and material details
     define_units(mapdl)
 
+    r0 = create_wire_cube(mapdl, map_coordinate([0, 0, 0]), 10, 1)
 
-    r0 = create_wire_cube(mapdl, [0, 0, 0], 10, 1)
-    mapdl.aplot()
+    r1 = create_wire_cube(mapdl, map_coordinate([0, 1, 0]), 10, 1)
+    merge_volume(mapdl, r1)
 
-    r1 = create_wire_cube(mapdl, [0, 22, 0], 10, 1)
-    mapdl.aplot()
+    r2 = create_wire_cube(mapdl, map_coordinate([0, 0, 1]), 10, 1)
+    merge_volume(mapdl, r2)
 
-    r2 = create_wire_cube(mapdl, [22, 0, 0], 10, 1)
-    mapdl.aplot()
-
-    r3 = create_wire_cube(mapdl, [0, 0, 22], 10, 1)
-    mapdl.aplot()
-
-    print("Return:", r0, r1, r2, r3)
-    print("current selections: ", mapdl.geometry.vnum)
-
-    mapdl.vadd(r0, r1, r2, r3)
+    r3 = create_wire_cube(mapdl, map_coordinate([1, 0, 0]), 10, 1)
+    merge_volume(mapdl, r3)
 
 
     print("printing...")
     mapdl.aplot()
 
+
+    mesh_volume(mapdl)
+
     
-
-
-
     print("done")
 
+def map_coordinate(i):
+    cx = i[0]
+    cy = i[1]
+    cz = i[2]
 
+    fact = 20 + (2*1.5)
+
+    return [cx*fact, cy*fact, cz*fact]
 
 def define_units(mapdl):
     print("Defining units... ")
@@ -65,19 +65,19 @@ def define_units(mapdl):
 
 def mesh_volume(mapdl):
 
+    mapdl.geometry.volume_select('ALL')
+    print("Mesh volumes: ", mapdl.geometry.vnum)
+
     print("Meshing... \n")
     mapdl.prep7()
     mapdl.et(1, "SOLID187")
     mapdl.vmesh(*mapdl.geometry.vnum)
-
     
     print("Printing mesh...")
-    _ = mapdl.eplot(vtk=True, show_edges=True, show_axes=False, line_width=2, background="w")
+    _ = mapdl.eplot()
 
     print("Finished Meshing... \n")
-    # mapdl.et(1, "SOLID186")
-    # mapdl.vsweep("all")
-    # _ = mapdl.eplot()
+    
 
 
 
