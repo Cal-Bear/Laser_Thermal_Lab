@@ -4,10 +4,18 @@ from ansys.mapdl.core import launch_mapdl
 
 
 
-def create_wire_cube(mapdl, center, w, r):
+def create_wire_cube(mapdl, center, x):
+    '''
+        creates an x by x block at location designated by 'center'
 
-    # Difference in size between corners and beams
-    d = r * 1.5
+        - Corner block side lengths will be 1/10 the length of the cube itself
+        - Beams will be 90% the size of the corner cubes
+    
+    '''
+    # Define cube constants
+    d = x/20
+    w = (x/2) - d
+    r = 0.9 * d
     
     # get x y z values of the cube
     cx = center[0]
@@ -68,10 +76,18 @@ def create_wire_cube(mapdl, center, w, r):
     mapdl.geometry.volume_select(ret, 'U')
     return ret[0]
 
-def create_wire_cross_cube(mapdl, center, w, r):
+def create_wire_cross_cube(mapdl, center, x):
+    '''
+        creates an x by x block at location designated by 'center'
 
-    # Difference in size between corners and beams
-    d = r * 1.5
+        - Corner block side lengths will be 1/10 the length of the cube itself
+        - Beams will be 90% the size of the corner cubes
+    
+    '''
+    # Define cube constants
+    d = x/20
+    w = (x/2) - d
+    r = 0.9 * d
     
     # get x y z values of the cube
     cx = center[0]

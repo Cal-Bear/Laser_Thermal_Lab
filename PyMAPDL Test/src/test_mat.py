@@ -2,6 +2,7 @@ import numpy as np
 import math 
 from ansys.mapdl.core import launch_mapdl
 from create_entity import *
+# from entity_matrix import *
 
 
 #    +-----------------------------------------------------+
@@ -18,16 +19,17 @@ def main():
     # Define units and material details
     define_units(mapdl)
 
-    r0 = create_wire_cube(mapdl, map_coordinate([0, 0, 0]), 10, 1)
+    r0 = create_wire_cube(mapdl, [0, 0, 0], 20)
 
-    r1 = create_wire_cube(mapdl, map_coordinate([0, 1, 0]), 10, 1)
+    r1 = create_wire_cube(mapdl, [20, 0, 0], 20)
     merge_volume(mapdl, r1)
 
-    r2 = create_wire_cube(mapdl, map_coordinate([0, 0, 1]), 10, 1)
+    r2 = create_wire_cube(mapdl, [0, 0, 20], 20)
     merge_volume(mapdl, r2)
 
-    r3 = create_wire_cube(mapdl, map_coordinate([1, 0, 0]), 10, 1)
+    r3 = create_wire_cube(mapdl, [20, 0, 20], 20)
     merge_volume(mapdl, r3)
+
 
 
     print("printing...")
