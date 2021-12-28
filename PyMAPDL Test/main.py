@@ -1,6 +1,7 @@
 import numpy as np
 import math 
 from ansys.mapdl.core import launch_mapdl
+from entity_matrix import *
 
 DEBUG_FUNCTIONS = False
 DEBUG_MAIN = True

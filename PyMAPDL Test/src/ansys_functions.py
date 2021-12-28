@@ -1,8 +1,7 @@
 import numpy as np
 import math 
 from ansys.mapdl.core import launch_mapdl
-from create_entity import *
-# from entity_matrix import *
+from block import *
 
 
 #    +-----------------------------------------------------+
@@ -11,7 +10,7 @@ from create_entity import *
 #    |                                                     |
 #    +-----------------------------------------------------+
 
-def main():
+def test_ansys():
     # Create mapdl Object
     mapdl = launch_mapdl()
     mapdl.clear()
@@ -20,15 +19,12 @@ def main():
     define_units(mapdl)
 
     r0 = create_wire_cube(mapdl, [0, 0, 0], 20)
+    merge_volume(mapdl, create_wire_cube(mapdl, [20, 0, 0], 20))
+    merge_volume(mapdl, create_wire_cube(mapdl, [0, 0, 20], 20))
+    merge_volume(mapdl, create_wire_cube(mapdl, [20, 0, 20], 20))
 
-    r1 = create_wire_cube(mapdl, [20, 0, 0], 20)
-    merge_volume(mapdl, r1)
-
-    r2 = create_wire_cube(mapdl, [0, 0, 20], 20)
-    merge_volume(mapdl, r2)
-
-    r3 = create_wire_cube(mapdl, [20, 0, 20], 20)
-    merge_volume(mapdl, r3)
+    merge_volume(mapdl, create_wire_cube(mapdl, [20, 20, 0], 20))
+    # merge_volume(mapdl, create_wire_cube(mapdl, [20, 20, 20], 20))
 
 
 
@@ -80,8 +76,3 @@ def mesh_volume(mapdl):
 
     print("Finished Meshing... \n")
     
-
-
-
-# Runs the main function
-main()

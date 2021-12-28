@@ -69,8 +69,8 @@ class block_matrix:
 
         return ret
     
-    def generate_blocks(self):
-    
+    def generate_blocks(self, mapdl):
+        return None
 
 
     def print_short(self):
@@ -84,16 +84,18 @@ class block_matrix:
             for j in i:
                 print(j)
             print("-----")
+    
 
+    def get_block_function(name):
+        
+        return None
         
 
 
 
 
 
-a = block_matrix([[['a']]])
-a.print_short()
-a.print_full()
+
 
 
 
