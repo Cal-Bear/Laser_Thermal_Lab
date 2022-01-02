@@ -6,7 +6,7 @@ from block import *
 
 #    +-----------------------------------------------------+
 #    |                                                     |
-#    |                 Main Function                       |
+#    |                 Main Functions                      |
 #    |                                                     |
 #    +-----------------------------------------------------+
 
@@ -18,24 +18,30 @@ def test_ansys():
     # Define units and material details
     define_units(mapdl)
 
-    r0 = create_wire_cube(mapdl, [0, 0, 0], 20)
-    merge_volume(mapdl, create_wire_cube(mapdl, [20, 0, 0], 20))
-    merge_volume(mapdl, create_wire_cube(mapdl, [0, 0, 20], 20))
-    merge_volume(mapdl, create_wire_cube(mapdl, [20, 0, 20], 20))
+    r0 = create_wire_cross(mapdl, [0, 0, 0], 10)
+    mapdl.aplot()
+    create_wire_cross(mapdl, [0, 0, 10], 10)
+    mapdl.aplot()
+    # merge_volume(mapdl, create_wire_cross_cube(mapdl, [0, 0, 10], 10))
+    # merge_volume(mapdl, create_wire_cube(mapdl, [0, 10, 0], 10))
+    # merge_volume(mapdl, create_wire_cross_cube(mapdl, [0, 10, 10], 10))
 
-    merge_volume(mapdl, create_wire_cube(mapdl, [20, 20, 0], 20))
-    # merge_volume(mapdl, create_wire_cube(mapdl, [20, 20, 20], 20))
+    # merge_volume(mapdl, create_wire_cube(mapdl, [10, 0, 0], 10))
+    # merge_volume(mapdl, create_wire_cube(mapdl, [10, 0, 10], 10))
+    # merge_volume(mapdl, create_wire_cube(mapdl, [10, 10, 0], 10))
+    # merge_volume(mapdl, create_wire_cube(mapdl, [10, 10, 10], 10))
 
 
 
     print("printing...")
-    mapdl.aplot()
+    # mapdl.aplot()
 
 
-    mesh_volume(mapdl)
+    # mesh_volume(mapdl)
 
     
     print("done")
+
 
 def map_coordinate(i):
     cx = i[0]
@@ -45,6 +51,7 @@ def map_coordinate(i):
     fact = 20 + (2*1.5)
 
     return [cx*fact, cy*fact, cz*fact]
+
 
 def define_units(mapdl):
     print("Defining units... ")
@@ -75,4 +82,38 @@ def mesh_volume(mapdl):
     _ = mapdl.eplot()
 
     print("Finished Meshing... \n")
+
+
+
+
+
+#    +-----------------------------------------------------+
+#    |                                                     |
+#    |                Mapdl Functions                      |
+#    |                                                     |
+#    +-----------------------------------------------------+
+
+def refresh_volumes(mapdl):
+    ret = mapdl.geometry.vnum
+    print("current stuff:", mapdl.geometry.vnum)
+    mapdl.geometry.volume_select(ret, 'U')
+    return ret
+
+def merge_volume(mapdl, v):
+    mapdl.geometry.volume_select('ALL')
+    if v in mapdl.geometry.vnum:
+        mapdl.vadd(*mapdl.geometry.vnum)
+    else:
+        mapdl.vadd(*mapdl.geometry.vnum, v)
     
+    mapdl.geometry.volume_select(mapdl.geometry.vnum, 'U')
+
+def merge_all(mapdl):
+    mapdl.geometry.volume_select('ALL')
+    if len(mapdl.geometry.vnum) > 1:
+        mapdl.vadd(*mapdl.geometry.vnum)
+    
+    mapdl.geometry.volume_select(mapdl.geometry.vnum, 'U')
+
+
+# test_ansys()

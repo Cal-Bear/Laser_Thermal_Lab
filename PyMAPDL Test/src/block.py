@@ -2,7 +2,18 @@ import numpy as np
 import math 
 from ansys.mapdl.core import launch_mapdl
 
+def no_op(mapdl, center, x):
+    '''No-op operation - used to represent an empty square
 
+    '''
+    return
+
+def print_op(mapdl, center, x):
+    '''No-op operation - used to represent an empty square
+    
+    '''
+    print("Print: ", center)
+    return
 
 def create_wire_cube(mapdl, center, x):
     '''
@@ -12,6 +23,7 @@ def create_wire_cube(mapdl, center, x):
         - Beams will be 90% the size of the corner cubes
     
     '''
+
     # Define cube constants
     d = x/20
     w = (x/2) - d
@@ -76,6 +88,69 @@ def create_wire_cube(mapdl, center, x):
     mapdl.geometry.volume_select(ret, 'U')
     return ret[0]
 
+
+def create_wire_cross(mapdl, center, x):
+    '''
+        creates an x by x block at location designated by 'center'
+
+        - Corner block side lengths will be 1/10 the length of the cube itself
+        - Beams will be 90% the size of the corner cubes
+    
+    '''
+    # Define cube constants
+    d = x/20
+    w = (x/2) - d
+    r = 0.7 * d
+    
+    # get x y z values of the cube
+    cx = center[0]
+    cy = center[1]
+    cz = center[2]
+
+    # Make top layer
+    k010 = [cx-w, cy+w, cz-w]
+    k011 = [cx-w, cy+w, cz+w]
+    k111 = [cx+w, cy+w, cz+w]
+    k110 = [cx+w, cy+w, cz-w]
+    
+    # Make bottom layer
+    k000 = [cx-w, cy-w, cz-w]
+    k001 = [cx-w, cy-w, cz+w]
+    k101 = [cx+w, cy-w, cz+w]
+    k100 = [cx+w, cy-w, cz-w]
+
+    create_block(mapdl, d, k101)
+    create_block(mapdl, d, k010)
+    extrude_beam(mapdl, r, k101, k010)
+    # mapdl.vovlap(*mapdl.geometry.vnum)
+    mapdl.vadd(*mapdl.geometry.vnum)
+
+    create_block(mapdl, d, k100)
+    create_block(mapdl, d, k011)
+    extrude_beam(mapdl, r, k100, k011)
+    # mapdl.vovlap(*mapdl.geometry.vnum)
+    mapdl.vadd(*mapdl.geometry.vnum)
+
+    # Create cross beams
+    create_block(mapdl, d, k111)
+    create_block(mapdl, d, k000)
+    extrude_beam(mapdl, r, k000, k111)
+    mapdl.vovlap(*mapdl.geometry.vnum)
+    mapdl.vadd(*mapdl.geometry.vnum)
+
+    create_block(mapdl, d, k110)
+    create_block(mapdl, d, k001)
+    extrude_beam(mapdl, r, k001, k110)
+    mapdl.vovlap(*mapdl.geometry.vnum)
+    mapdl.vadd(*mapdl.geometry.vnum) 
+
+
+    ret = mapdl.geometry.vnum
+    print("current stuff:", mapdl.geometry.vnum)
+    mapdl.geometry.volume_select(ret, 'U')
+    return ret[0]
+
+
 def create_wire_cross_cube(mapdl, center, x):
     '''
         creates an x by x block at location designated by 'center'
@@ -87,7 +162,7 @@ def create_wire_cross_cube(mapdl, center, x):
     # Define cube constants
     d = x/20
     w = (x/2) - d
-    r = 0.9 * d
+    r = 0.7 * d
     
     # get x y z values of the cube
     cx = center[0]
@@ -144,15 +219,15 @@ def create_wire_cross_cube(mapdl, center, x):
     # merge edge block
     mapdl.vadd(*mapdl.geometry.vnum)
 
-    mapdl.aplot()
-
     # Create cross beams
     extrude_beam(mapdl, r, k000, k111)
-    #mapdl.vovlap(*mapdl.geometry.vnum)
+    mapdl.vovlap(*mapdl.geometry.vnum)
     mapdl.vadd(*mapdl.geometry.vnum)
 
+    mapdl.aplot()
     extrude_beam(mapdl, r, k001, k110)
-    # mapdl.vovlap(*mapdl.geometry.vnum)
+    mapdl.vovlap(*mapdl.geometry.vnum)
+    print("current stuff:", mapdl.geometry.vnum)
     mapdl.vadd(*mapdl.geometry.vnum)
 
     extrude_beam(mapdl, r, k100, k011)
@@ -160,15 +235,16 @@ def create_wire_cross_cube(mapdl, center, x):
     mapdl.vadd(*mapdl.geometry.vnum)
 
     extrude_beam(mapdl, r, k101, k010)
-    #mapdl.vovlap(*mapdl.geometry.vnum)
+    # mapdl.vovlap(*mapdl.geometry.vnum)
     mapdl.vadd(*mapdl.geometry.vnum)
 
-    create_block(mapdl, 1.5 * r, center)
-    #mapdl.vovlap(*mapdl.geometry.vnum)
-    mapdl.vadd(*mapdl.geometry.vnum)
+    # create_block(mapdl, 1.5 * r, center)
+    # mapdl.vovlap(*mapdl.geometry.vnum)
+    # mapdl.vadd(*mapdl.geometry.vnum)
 
 
     ret = mapdl.geometry.vnum
+    print("current stuff:", mapdl.geometry.vnum)
     mapdl.geometry.volume_select(ret, 'U')
     return ret[0]
 
@@ -226,7 +302,6 @@ def create_vovlap_test(mapdl, center, w, r):
     return ret[0]
 
 
-
 def create_block(mapdl, w, center):
     # get x y z values of the cube
     cx = center[0]
@@ -242,18 +317,10 @@ def create_block(mapdl, w, center):
     mapdl.vext(a0, dy=w*2)
 
 
-def merge_volume(mapdl, v):
-    mapdl.geometry.volume_select('ALL')
-    mapdl.vadd(*mapdl.geometry.vnum, v)
-    
-    mapdl.geometry.volume_select(mapdl.geometry.vnum, 'U')
-
-
 def extrude_beam_offset(mapdl, r, start, end, offset):
     s = np.array(end) - np.array(start)
     x = s / np.linalg.norm(s)
     extrude_beam(mapdl, r, np.array(start) + offset * x, np.array(end) - offset * x)
-
 
 
 def extrude_beam(mapdl, r, start, end):
@@ -272,8 +339,6 @@ def extrude_beam(mapdl, r, start, end):
     l0 = mapdl.l(k1, k0)
     c0 = mapdl.al(* mapdl.circle(k0, r, k1, kx))
     mapdl.vdrag(c0, nlp1=l0)
-
-
 
 
 

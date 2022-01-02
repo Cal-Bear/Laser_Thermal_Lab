@@ -1,11 +1,11 @@
-
-
+from ansys_functions import *
 
 class block_matrix:
     
     block_width = 10
 
-    def __init__(self, input):
+
+    def __init__(self, input, type = 's'):
         ''' Creates an block matrix, which houses the different object values
             inout = input matrix of the top corner of the matrix
 
@@ -18,9 +18,15 @@ class block_matrix:
               [g, h]]]
 
         '''
-        self.short = input
-        self.full = self.expand(input)
+        if type == 'f':
+            self.short = None
+            self.full = input
+        else:
+            self.short = input
+            self.full = self.expand(input)
+        
     
+
     def expand(self, input):
         ''' Expands the shortened matrix into a full matrix through mirrorinf values
                 across the x, y, and x axes
@@ -58,8 +64,8 @@ class block_matrix:
                 ['c', 'd', 'd', 'c']
                 ['c', 'd', 'd', 'c']
                 ['a', 'b', 'b', 'a']
-
         '''
+
         ret = []
         for i in (self.short + self.short[::-1]):
             inner = []
@@ -69,6 +75,7 @@ class block_matrix:
 
         return ret
     
+
     def generate_blocks(self, mapdl):
         return None
 
@@ -79,17 +86,59 @@ class block_matrix:
                 print(j)
             print("-----")
     
+
     def print_full(self):
         for i in self.full:
             for j in i:
                 print(j)
             print("-----")
-    
 
-    def get_block_function(name):
+
+    def construct_matrix(self, mapdl, merge, dict):
         
-        return None
-        
+        self.print_full()
+        blocks = self.full
+        first = True
+
+        for i in range(len(blocks)):
+            for j in range(len(blocks[i])):
+                for k in range(len(blocks[i][j])):
+                    # Determing block type
+                    print("block type: ", blocks[i][j][k])
+                    letter = blocks[i][j][k]
+                    if letter in dict.keys():
+                        f = dict[letter]
+                    else:
+                        print("Key", letter, "could not be found")
+                        f = dict["e"]
+
+                    # Create the volume
+                    curr = f(mapdl, 
+                      [i*block_matrix.block_width, 
+                       j*block_matrix.block_width, 
+                       k*block_matrix.block_width], 
+                      block_matrix.block_width)
+
+                    # Merge the volume
+                    if not first and curr != None:
+                        try:
+                            merge(mapdl, curr)
+                        except Exception as e:
+                            print("\n","Skipping merge operation and attempting to move on...","\n")
+                            refresh_volumes(mapdl)
+                            mapdl.aplot()
+                            continue 
+                    else:
+                        first = False
+                    
+                    
+                    
+
+
+
+
+
+
 
 
 
