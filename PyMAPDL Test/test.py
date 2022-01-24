@@ -99,7 +99,7 @@ def mesh_volume(mapdl):
     print("Meshing... \n")
     mapdl.prep7()
     mapdl.et(1, "SOLID187")
-    mapdl.vmesh("all")
+    mapdl.vmesh("all") 
 
 
 
